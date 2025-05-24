@@ -3,6 +3,7 @@ import streamlit as st
 from cd_modules.core.inquiry_engine import InquiryEngine
 from cd_modules.core.epistemic_navigator import EpistemicNavigator
 from cd_modules.core.contextual_generator import ContextualGenerator
+from cd_modules.core.reasoning_tracker import ReasoningTracker
 
 st.set_page_config(page_title="Código Deliberativo – MVP", layout="wide")
 
@@ -40,6 +41,7 @@ if st.button("Generar árbol de deliberación"):
     # ───────────── Recuperar fuentes y generar contexto ─────────────
     nav = EpistemicNavigator()
     cgen = ContextualGenerator()
+    tracker = ReasoningTracker()
 
     st.subheader("Fuentes relevantes y contexto profesional")
     for capa in tree:
@@ -54,9 +56,21 @@ if st.button("Generar árbol de deliberación"):
                 contexto = cgen.generate(padre, fuentes)
                 st.markdown("**Respuesta profesional generada:**")
                 st.success(contexto)
+                tracker.add_step(padre, fuentes, contexto)
+
+    # ───────────── Visualizar Reasoning Tracker y métrica EEE ─────────────
+    if tracker.get_steps():
+        st.subheader("📊 Rastreo y métrica EEE")
+        for idx, step in enumerate(tracker.get_steps(), 1):
+            st.markdown(f"**{idx}. Pregunta:** {step['question']}")
+            st.markdown(f"**Fuentes:**")
+            for src in step['sources']:
+                st.markdown(f"- {src}")
+            st.markdown(f"**Respuesta generada:** {step['generated_answer']}")
+            st.markdown("---")
+        st.info(f"EEE: {tracker.compute_eee()}% de pasos con fuentes asociadas.")
 
     st.info("Puedes cambiar la profundidad/anchura y volver a generar para explorar otros caminos deliberativos.")
 
 else:
     st.info("Introduce una pregunta y pulsa el botón para empezar.")
-
