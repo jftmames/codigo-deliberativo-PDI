@@ -1,50 +1,62 @@
 import streamlit as st
 
-# ───────────────────── Imports de tus módulos ─────────────────────
 from cd_modules.core.inquiry_engine import InquiryEngine
 from cd_modules.core.epistemic_navigator import EpistemicNavigator
+from cd_modules.core.contextual_generator import ContextualGenerator
 
-# (Añadirás ContextualGenerator, AdaptiveDialogue y Tracker más adelante)
-
-# ─────────────────── Configuración de página ──────────────────────
 st.set_page_config(page_title="Código Deliberativo – MVP", layout="wide")
 
 st.title("Código Deliberativo – MVP")
-st.caption("Interfaz inicial – ahora con generador jerárquico de preguntas.")
+st.caption("Demo académico: Generación deliberativa, recuperación y contexto jurídico.")
 
-# ───────────────────────  Barra lateral  ──────────────────────────
+# ───────────── Sidebar para parámetros ─────────────
 st.sidebar.header("⚙️ Configuración")
 domain = st.sidebar.selectbox("Dominio jurídico", ["Propiedad Intelectual"])
-depth = st.sidebar.slider("Profundidad", 1, 4, 2)
-width = st.sidebar.slider("Anchura", 1, 5, 3)
+depth = st.sidebar.slider("Profundidad de árbol", 1, 4, 2)
+width = st.sidebar.slider("Anchura (sub-preguntas por nivel)", 1, 5, 3)
 
-# ────────────────── Entrada de la pregunta ────────────────────────
-question = st.text_input("Escribe tu pregunta jurídica aquí 👇")
+# ───────────── Entrada de pregunta ─────────────
+question = st.text_input("Introduce tu pregunta jurídica:")
 
-# ────────────────── Botón principal ───────────────────────────────
-if st.button("Iniciar deliberación"):
+if st.button("Generar árbol de deliberación"):
     if not question.strip():
-        st.warning("Por favor, introduce una pregunta.")
+        st.warning("Por favor, introduce una pregunta antes de continuar.")
         st.stop()
 
-    # ────────── Generar jerarquía de preguntas ──────────
-    inq = InquiryEngine(question, depth=depth, width=width)
-    tree = inq.generate()
+    # ───────────── Generar la jerarquía de preguntas ─────────────
+    ie = InquiryEngine(question, depth=depth, width=width)
+    tree = ie.generate()
 
-    st.subheader("Jerarquía de preguntas")
+    st.subheader("Jerarquía de preguntas generada")
     for nivel, capa in enumerate(tree, start=1):
         padre, hijos = next(iter(capa.items()))
         st.markdown(f"**Nivel {nivel}:** {padre}")
-        st.markdown("- " + "\n- ".join(hijos) if hijos else "*Sin sub-preguntas*")
+        if hijos:
+            for hijo in hijos:
+                st.markdown(f"- {hijo}")
+        else:
+            st.markdown("*Sin sub-preguntas*")
 
-    # ────────── Fuentes de ejemplo con Navigator ─────────
+    # ───────────── Recuperar fuentes y generar contexto ─────────────
     nav = EpistemicNavigator()
+    cgen = ContextualGenerator()
 
-    st.subheader("Fuentes sugeridas")
+    st.subheader("Fuentes relevantes y contexto profesional")
     for capa in tree:
         padre, _ = next(iter(capa.items()))
-        fuentes = nav.search(padre, k=3)
-        with st.expander(padre):
-            st.write(fuentes)
+        fuentes = [src for src, _ in nav.search(padre, k=3)]
+        with st.expander(f"Fuentes y contexto para: {padre}"):
+            st.markdown("**Fuentes relevantes:**")
+            for src in fuentes:
+                st.markdown(f"- {src}")
 
-    st.success("✅ Flujo mínimo completado. ¡Seguiremos ampliando!")
+            if st.button(f"Generar contexto para: {padre}", key=padre):
+                contexto = cgen.generate(padre, fuentes)
+                st.markdown("**Respuesta profesional generada:**")
+                st.success(contexto)
+
+    st.info("Puedes cambiar la profundidad/anchura y volver a generar para explorar otros caminos deliberativos.")
+
+else:
+    st.info("Introduce una pregunta y pulsa el botón para empezar.")
+
