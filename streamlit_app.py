@@ -2,6 +2,8 @@ import streamlit as st
 from collections import deque
 import pandas as pd
 import datetime
+import streamlit as st
+
 
 # --- Mockups / Simulaciones ---
 CORPUS_LEGAL = {
