@@ -1,0 +1,2 @@
+class ContextualGenerator:
+    """TODO: implementar"""

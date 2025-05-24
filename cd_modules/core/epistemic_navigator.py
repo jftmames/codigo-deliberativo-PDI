@@ -1,0 +1,2 @@
+class EpistemicNavigator:
+    """TODO: implementar"""
