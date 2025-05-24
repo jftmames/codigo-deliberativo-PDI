@@ -4,7 +4,3 @@ openai==1.28.0
 faiss-cpu==1.7.4
 pydantic==2.7.1
 python-dotenv==1.0.1
-
-git add runtime.txt requirements.txt
-git commit -m "build: fija python-3.10 y ajusta dependencias para Streamlit Cloud"
-git push                       # rama main
