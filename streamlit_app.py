@@ -1,114 +1,111 @@
 import streamlit as st
-
+import pandas as pd
 from cd_modules.core.inquiry_engine import InquiryEngine
-from cd_modules.core.epistemic_navigator import EpistemicNavigator
 from cd_modules.core.contextual_generator import ContextualGenerator
+from cd_modules.core.epistemic_navigator import EpistemicNavigator
+from datetime import datetime
+import io
 
-st.set_page_config(page_title="Código Deliberativo – MVP", layout="wide")
+# --------- PANEL INICIAL: SOBRE LA DEMO ---------
+with st.expander("ℹ️ Sobre esta demo (leer antes de usar)", expanded=True):
+    st.markdown("""
+**MVP Deliberativo en Derecho de la Propiedad Intelectual**
 
-st.title("Código Deliberativo – MVP")
-st.caption("Demo académico: Generación deliberativa, recuperación y contexto jurídico.")
+- Esta demo muestra el flujo y experiencia del prototipo funcional de asistencia deliberativa para Derecho de PI.
+- **Componentes reales:** árbol deliberativo, generación de contexto jurídico, Reasoning Tracker (historial y descarga).
+- **Componentes simulados:** corpus legal (BOE, OEPM, sentencias, tratados), grafo PI, motor PathRAG, validador epistémico.
+- En la versión final, la app integrará búsqueda en bases reales, grafo PI visual, y validación automática de afirmaciones legales.
+- Si tienes dudas sobre el roadmap técnico, consulta la documentación o pregunta al presentador.
+""")
 
-# --- Sidebar para parámetros ---
-st.sidebar.header("⚙️ Configuración")
-domain = st.sidebar.selectbox("Dominio jurídico", ["Propiedad Intelectual"])
-depth = st.sidebar.slider("Profundidad de árbol", 1, 4, 2)
-width = st.sidebar.slider("Anchura (sub-preguntas por nivel)", 1, 5, 3)
+st.markdown("---")
 
-# --- Inicializa session_state ---
-if "contextos" not in st.session_state:
-    st.session_state["contextos"] = {}
-if "tracker" not in st.session_state:
-    st.session_state["tracker"] = []
+# --------- MOCKUP VISUAL DEL GRAFO PI FUTURO ---------
+with st.expander("📊 Vista previa: Futuro grafo PI (mockup visual)"):
+    st.image("https://raw.githubusercontent.com/jftamames/codigo-deliberativo-PDI/main/assets/grafo_pi_mockup.png",
+             caption="Ejemplo ilustrativo de cómo el grafo PI mostraría relaciones entre conceptos, leyes y casos.")
+    st.caption("En la versión avanzada, este grafo será interactivo y se generará dinámicamente según la consulta.")
 
-# --- Entrada de pregunta ---
-question = st.text_input("Introduce tu pregunta jurídica:")
+# --------- SUGERENCIA DE PREGUNTA PROBLEMÁTICA ---------
+with st.expander("🎓 ¿Ejemplo de pregunta compleja para probar?"):
+    st.code("¿Es protegible por derecho de autor una base de datos generada parcialmente por IA?")
 
-if st.button("Generar árbol de deliberación"):
-    if not question.strip():
-        st.warning("Por favor, introduce una pregunta antes de continuar.")
-        st.stop()
+st.markdown("---")
 
-    # Limpia contextos y tracker para nuevo árbol
-    st.session_state["contextos"] = {}
-    st.session_state["tracker"] = []
+# --------- INPUT PRINCIPAL DEL USUARIO ---------
+st.header("🧩 Consulta jurídica en Propiedad Intelectual")
+pregunta = st.text_area("Introduce tu pregunta jurídica (PI):", 
+                        placeholder="Ejemplo: ¿Cuáles son los requisitos para registrar una marca de la UE?")
 
-    # --- Genera la jerarquía de preguntas ---
-    ie = InquiryEngine(question, depth=depth, width=width)
+if pregunta:
+    # --------- INQUIRY ENGINE: GENERACIÓN DEL ÁRBOL DELIBERATIVO ---------
+    st.subheader("🔹 Árbol deliberativo de subpreguntas")
+    st.caption("🧠 Este árbol representa la descomposición conceptual de la pregunta en subtemas PI, equivalente a un grafo legal especializado.")
+
+    ie = InquiryEngine(pregunta, depth=2, width=2)
     tree = ie.generate()
 
-    st.subheader("Jerarquía de preguntas generada")
-    for nivel, capa in enumerate(tree, start=1):
-        padre, hijos = next(iter(capa.items()))
-        st.markdown(f"**Nivel {nivel}:** {padre}")
-        if hijos:
-            for hijo in hijos:
-                st.markdown(f"- {hijo}")
-        else:
-            st.markdown("*Sin sub-preguntas*")
-
-    # Guarda el árbol en sesión para que persista entre pulsaciones
-    st.session_state["tree"] = tree
-
-else:
-    tree = st.session_state.get("tree")
-    if tree:
-        st.subheader("Jerarquía de preguntas generada previamente")
-        for nivel, capa in enumerate(tree, start=1):
-            padre, hijos = next(iter(capa.items()))
-            st.markdown(f"**Nivel {nivel}:** {padre}")
+    def display_tree(tree, level=0):
+        for nodo, hijos in tree.items():
+            st.markdown(" " * level + f"- **{nodo}**")
             if hijos:
-                for hijo in hijos:
-                    st.markdown(f"- {hijo}")
-            else:
-                st.markdown("*Sin sub-preguntas*")
+                display_tree(hijos, level + 1)
+    display_tree(tree)
 
-# --- Recupera fuentes y genera contexto para cada pregunta ---
-if tree:
+    st.markdown("---")
+
+    # --------- EPISTEMIC NAVIGATOR: FUENTES SIMULADAS ---------
+    st.subheader("🔹 Fuentes relevantes para cada subpregunta")
+    st.markdown("🔎 *Fuentes simuladas para demo. En producción, la recuperación será sobre BOE, OEPM, sentencias y tratados oficiales.*")
+
     nav = EpistemicNavigator()
-    cgen = ContextualGenerator()
-
-    st.subheader("Fuentes relevantes y contexto profesional")
-    for capa in tree:
-        padre, _ = next(iter(capa.items()))
+    fuentes_dict = {}
+    for padre in tree:
         fuentes = [src for src, _ in nav.search(padre, k=3)]
-        with st.expander(f"Fuentes y contexto para: {padre}"):
-            st.markdown("**Fuentes relevantes:**")
-            for src in fuentes:
-                st.markdown(f"- {src}")
+        fuentes_dict[padre] = fuentes
+        st.markdown(f"**{padre}**")
+        for fuente in fuentes:
+            st.markdown(f"- {fuente}")
 
-            # Botón y lógica con session_state
-            if st.button(f"Generar contexto para: {padre}", key=padre):
-                contexto = cgen.generate(padre, fuentes)
-                st.session_state["contextos"][padre] = contexto
-                st.session_state["tracker"].append({
-                    "question": padre,
-                    "sources": fuentes,
-                    "generated_answer": contexto
-                })
+    st.markdown("---")
 
-            # Mostrar SIEMPRE el contexto si ya se ha generado
-            if padre in st.session_state["contextos"]:
-                st.markdown("**Respuesta profesional generada:**")
-                st.success(st.session_state["contextos"][padre])
+    # --------- CONTEXTUAL GENERATOR: RESPUESTA A SUBPREGUNTAS ---------
+    st.subheader("🔹 Generación de contexto jurídico (simulada)")
+    st.caption("📑 Contexto generado con IA adaptada a PI. En el futuro, cada respuesta será validada automáticamente por el corpus legal.")
 
-    # --- Visualizar Reasoning Tracker y métrica EEE ---
-    if st.session_state["tracker"]:
-        st.subheader("📊 Rastreo y métrica EEE")
-        for idx, step in enumerate(st.session_state["tracker"], 1):
-            st.markdown(f"**{idx}. Pregunta:** {step['question']}")
-            st.markdown(f"**Fuentes:**")
-            for src in step['sources']:
-                st.markdown(f"- {src}")
-            st.markdown(f"**Respuesta generada:** {step['generated_answer']}")
-            st.markdown("---")
-        total = len(st.session_state["tracker"])
-        con_fuentes = sum(1 for step in st.session_state["tracker"] if step['sources'])
-        eee = round(100.0 * con_fuentes / total, 2) if total > 0 else 0.0
-        st.info(f"EEE: {eee}% de pasos con fuentes asociadas.")
+    cg = ContextualGenerator()
+    respuestas = {}
+    for padre in tree:
+        if st.button(f"Generar contexto para: {padre}"):
+            contexto = cg.generate(padre, fuentes_dict[padre])
+            respuestas[padre] = contexto
+            st.markdown(f"**Respuesta generada:** {contexto}")
 
-    st.info("Puedes cambiar la profundidad/anchura y volver a generar para explorar otros caminos deliberativos.")
+    st.markdown("---")
 
-else:
-    st.info("Introduce una pregunta y pulsa el botón para empezar.")
+    # --------- REASONING TRACKER Y EXPORTACIÓN ---------
+    st.subheader("🔹 Reasoning Tracker: Historial y descarga")
+    st.markdown("📝 Puedes descargar todo tu razonamiento y fuentes como CSV. Este registro es clave para auditoría, docencia y compliance.")
 
+    tracker_data = []
+    for padre in tree:
+        tracker_data.append({
+            "subpregunta": padre,
+            "fuentes": "; ".join(fuentes_dict[padre]),
+            "respuesta": respuestas.get(padre, "")
+        })
+    df_tracker = pd.DataFrame(tracker_data)
+
+    csv_buffer = io.StringIO()
+    df_tracker.to_csv(csv_buffer, index=False)
+    st.download_button(
+        label="⬇️ Descargar Reasoning Tracker (CSV)",
+        data=csv_buffer.getvalue(),
+        file_name=f"reasoning_tracker_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime='text/csv'
+    )
+
+st.info("""
+🔒 **Demo:** Algunas funcionalidades avanzadas (grafo PI real, PathRAG, validación epistémica automática) están en fase de desarrollo.  
+Consulta la documentación del proyecto para más información.
+""")

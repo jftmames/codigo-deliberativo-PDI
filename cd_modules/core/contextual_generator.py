@@ -1,28 +1,29 @@
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-
-RAG_PROMPT = """
-Eres un asistente jurídico. A partir de la pregunta y los extractos relevantes, 
-genera una respuesta clara, breve y profesional usando solo la información dada. 
-No inventes nada fuera del contexto. 
-———
-Pregunta: {question}
-Fuentes:
-{sources}
-———
-Respuesta profesional:
+"""
+Módulo ContextualGenerator
+--------------------------
+Genera una respuesta profesional a partir de una pregunta y fuentes relevantes.
+Imita el razonamiento de un experto integrando evidencias recuperadas.
+Perfecto para MVP, RAG académico y para integrar modelos generativos más adelante.
 """
 
 class ContextualGenerator:
-    def __init__(self, model_name="gpt-4o-mini"):
-        self.llm = ChatOpenAI(model=model_name, temperature=0.0)
-        self.prompt = ChatPromptTemplate.from_template(RAG_PROMPT)
+    def __init__(self):
+        pass
 
-    def generate(self, question: str, sources: list[str]) -> str:
-        formatted_sources = "\n".join(f"- {src}" for src in sources)
-        msg = self.prompt.format_messages(
-            question=question,
-            sources=formatted_sources
+    def generate(self, question, sources):
+        """
+        Recibe una pregunta y una lista de fuentes relevantes, y devuelve un texto explicativo.
+        Si tienes LLM, puedes sustituir el return por una llamada a la IA real.
+        """
+        contexto = f"**Pregunta:** {question}\n\n"
+        if sources:
+            contexto += "Se han consultado las siguientes fuentes relevantes:\n"
+            for src in sources:
+                contexto += f"- {src}\n"
+            contexto += "\n"
+        contexto += (
+            "Respuesta generada (demo):\n"
+            "Según las fuentes seleccionadas y el análisis deliberativo, "
+            "esta es la respuesta profesional simulada para la pregunta planteada."
         )
-        result = self.llm.invoke(msg)
-        return result.content.strip()
+        return contexto
