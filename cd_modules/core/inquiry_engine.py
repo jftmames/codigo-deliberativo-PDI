@@ -1,37 +1,49 @@
-"""
-Módulo InquiryEngine
---------------------
-Genera un árbol deliberativo de preguntas y subpreguntas a partir de una pregunta raíz.
-Permite configurar la profundidad (niveles de subpreguntas) y la anchura (cuántas subpreguntas por nivel).
-Ideal para visualizar y estructurar el razonamiento epistémico.
-"""
+# cd_modules/core/inquiry_engine.py
 
 class InquiryEngine:
-    def __init__(self, question, depth=2, width=3):
+    """
+    Generador de árbol de indagación (Inquiry Tree).
+    A partir de una pregunta inicial, genera subpreguntas y estructura de razonamiento.
+    """
+    def __init__(self, pregunta, max_depth=2, max_width=2):
+        self.pregunta = pregunta
+        self.max_depth = max_depth
+        self.max_width = max_width
+
+    def _expand(self, nodo, depth):
         """
-        Inicializa el motor con la pregunta raíz, la profundidad y la anchura.
+        Expande el nodo generando subpreguntas simuladas (mockup).
+        Retorna un diccionario {subpregunta: hijos}
         """
-        self.question = question
-        self.depth = depth
-        self.width = width
+        if depth >= self.max_depth:
+            return {}
+        hijos = {}
+        for i in range(1, self.max_width + 1):
+            subpregunta = f"Subpregunta {depth+1}.{i} sobre '{nodo}'"
+            hijos[subpregunta] = self._expand(subpregunta, depth + 1)
+        return hijos
 
     def generate(self):
         """
-        Devuelve una lista de diccionarios, cada uno representando un nivel del árbol:
-            [{pregunta_padre: [subpregunta1, subpregunta2, ...]}, ...]
-        Por defecto, las subpreguntas son generadas automáticamente para demo/MVP.
+        Devuelve un árbol de diccionarios con la estructura de preguntas/subpreguntas.
+        Ejemplo de salida:
+        {
+            '¿Qué es una marca?': {
+                'Subpregunta 1.1 sobre ...': {},
+                'Subpregunta 1.2 sobre ...': {}
+            }
+        }
         """
-        tree = []
-        current_parents = [self.question]
-        for nivel in range(self.depth):
-            capa = {}
-            next_parents = []
-            for parent in current_parents:
-                hijos = [
-                    f"{parent} [subpregunta {i+1}]" for i in range(self.width)
-                ]
-                capa[parent] = hijos
-                next_parents.extend(hijos)
-            tree.append(capa)
-            current_parents = next_parents
-        return tree
+        return {self.pregunta: self._expand(self.pregunta, 0)}
+
+    def get_subquestions(self, nodo):
+        """
+        Devuelve lista de subpreguntas directas de un nodo.
+        """
+        return list(self._expand(nodo, 0).keys())
+
+# Ejemplo de uso (no se ejecuta al importar)
+if __name__ == "__main__":
+    ie = InquiryEngine("¿Qué es una marca comunitaria?", max_depth=2, max_width=2)
+    tree = ie.generate()
+    print(tree)

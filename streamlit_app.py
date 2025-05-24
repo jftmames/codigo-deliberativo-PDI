@@ -1,111 +1,108 @@
 import streamlit as st
-import pandas as pd
 from cd_modules.core.inquiry_engine import InquiryEngine
 from cd_modules.core.contextual_generator import ContextualGenerator
-from cd_modules.core.epistemic_navigator import EpistemicNavigator
-from datetime import datetime
-import io
+import pandas as pd
 
-# --------- PANEL INICIAL: SOBRE LA DEMO ---------
-with st.expander("ℹ️ Sobre esta demo (leer antes de usar)", expanded=True):
-    st.markdown("""
-**MVP Deliberativo en Derecho de la Propiedad Intelectual**
+st.set_page_config(page_title="MVP Derecho PI – Código Deliberativo", layout="wide")
 
-- Esta demo muestra el flujo y experiencia del prototipo funcional de asistencia deliberativa para Derecho de PI.
-- **Componentes reales:** árbol deliberativo, generación de contexto jurídico, Reasoning Tracker (historial y descarga).
-- **Componentes simulados:** corpus legal (BOE, OEPM, sentencias, tratados), grafo PI, motor PathRAG, validador epistémico.
-- En la versión final, la app integrará búsqueda en bases reales, grafo PI visual, y validación automática de afirmaciones legales.
-- Si tienes dudas sobre el roadmap técnico, consulta la documentación o pregunta al presentador.
+# === 1. Título y Explicación Introductoria ===
+st.title("💡 MVP Derecho de la Propiedad Intelectual – Código Deliberativo")
+st.markdown("""
+Este demo simula cómo un despacho de abogados o una empresa puede consultar cuestiones jurídicas complejas de propiedad intelectual, desglosándolas en subpreguntas, generando contexto validado y manteniendo **auditoría completa del razonamiento**.  
+**Cada paso queda registrado, incluyendo las fuentes legales y la validación epistémica.**
 """)
 
-st.markdown("---")
+# === 2. Sidebar: Preguntas de ejemplo ===
+st.sidebar.header("Ejemplos de preguntas de PI")
+ejemplos = [
+    "¿Puede una empresa española registrar como marca comunitaria el nombre de un río famoso?",
+    "¿Es posible proteger una idea bajo la Ley de Propiedad Intelectual española?",
+    "¿Cuándo se considera agotado el derecho de distribución en la UE?",
+    "¿Puede el titular de derechos de autor prohibir la reventa de su obra física en España?",
+    "¿Qué límites existen para las obras derivadas de una patente europea?",
+    "¿Es legal el uso de una obra huérfana en una plataforma online en España?",
+    "¿Cómo se determina el carácter distintivo de una marca tridimensional?",
+]
+if st.sidebar.button("Cargar pregunta de ejemplo"):
+    st.session_state.pregunta = ejemplos[0]
 
-# --------- MOCKUP VISUAL DEL GRAFO PI FUTURO ---------
-with st.expander("📊 Vista previa: Futuro grafo PI (mockup visual)"):
-    st.image("https://raw.githubusercontent.com/jftamames/codigo-deliberativo-PDI/main/assets/grafo_pi_mockup.png",
-             caption="Ejemplo ilustrativo de cómo el grafo PI mostraría relaciones entre conceptos, leyes y casos.")
-    st.caption("En la versión avanzada, este grafo será interactivo y se generará dinámicamente según la consulta.")
+pregunta = st.text_area("Introduce aquí tu consulta jurídica:", value=st.session_state.get("pregunta", ""), key="pregunta_input")
 
-# --------- SUGERENCIA DE PREGUNTA PROBLEMÁTICA ---------
-with st.expander("🎓 ¿Ejemplo de pregunta compleja para probar?"):
-    st.code("¿Es protegible por derecho de autor una base de datos generada parcialmente por IA?")
+# === 3. Razonamiento y tracker ===
+if "tracker" not in st.session_state:
+    st.session_state.tracker = []
 
-st.markdown("---")
+# === 4. Procesamiento: Árbol de Preguntas ===
+if st.button("Analizar Pregunta"):
+    if not pregunta.strip():
+        st.error("Introduce una pregunta para analizar.")
+    else:
+        st.session_state.tracker = []  # Reinicia el tracker para nueva pregunta
+        st.session_state.inquiry = InquiryEngine(pregunta)
+        st.session_state.tree = st.session_state.inquiry.generate()
+        st.success("Desglose de la pregunta realizado. Ahora puedes generar contexto para cada subpregunta.")
+        st.session_state["pregunta"] = pregunta  # Guarda para futuras recargas
 
-# --------- INPUT PRINCIPAL DEL USUARIO ---------
-st.header("🧩 Consulta jurídica en Propiedad Intelectual")
-pregunta = st.text_area("Introduce tu pregunta jurídica (PI):", 
-                        placeholder="Ejemplo: ¿Cuáles son los requisitos para registrar una marca de la UE?")
+tree = st.session_state.get("tree", [])
 
-if pregunta:
-    # --------- INQUIRY ENGINE: GENERACIÓN DEL ÁRBOL DELIBERATIVO ---------
-    st.subheader("🔹 Árbol deliberativo de subpreguntas")
-    st.caption("🧠 Este árbol representa la descomposición conceptual de la pregunta en subtemas PI, equivalente a un grafo legal especializado.")
+# === 5. Visualización del Árbol + Contexto + Tracker ===
 
-    ie = InquiryEngine(pregunta, depth=2, width=2)
-    tree = ie.generate()
+def display_tree(tree, nivel=0, path=""):
+    """Muestra árbol de subpreguntas y contexto generado, con Reasoning Tracker."""
+    for nodo in tree:
+        subq = nodo["pregunta"]
+        hijos = nodo.get("subpreguntas", [])
+        key = f"contexto-{path}-{subq[:15]}-{nivel}"
+        st.markdown("  " * nivel + f"**{subq}**")
+        
+        # Botón para generar contexto para cada subpregunta
+        if st.button(f"Generar contexto para: {subq}", key=key):
+            gen = ContextualGenerator(subq)
+            contexto, fuentes, valido = gen.generate()
+            st.session_state.tracker.append({
+                "Subpregunta": subq,
+                "Contexto": contexto,
+                "Fuentes": "; ".join(fuentes),
+                "Validez epistémica": "✅" if valido else "❌"
+            })
+            st.success(f"Contexto generado para: {subq}")
+            with st.expander("Ver contexto generado", expanded=True):
+                st.markdown(contexto)
+                st.markdown(f"**Fuentes legales:** {fuentes}")
+                st.markdown(f"**Validez epistémica:** {'Sí' if valido else 'No'}")
+        
+        # Mostrar hijos (subpreguntas anidadas)
+        if hijos:
+            display_tree(hijos, nivel=nivel+1, path=f"{path}/{nivel}")
 
-    def display_tree(tree, level=0):
-        for nodo, hijos in tree.items():
-            st.markdown(" " * level + f"- **{nodo}**")
-            if hijos:
-                display_tree(hijos, level + 1)
+if tree:
+    st.header("Árbol de Subpreguntas")
     display_tree(tree)
-
     st.markdown("---")
 
-    # --------- EPISTEMIC NAVIGATOR: FUENTES SIMULADAS ---------
-    st.subheader("🔹 Fuentes relevantes para cada subpregunta")
-    st.markdown("🔎 *Fuentes simuladas para demo. En producción, la recuperación será sobre BOE, OEPM, sentencias y tratados oficiales.*")
+# === 6. Reasoning Tracker: Historial y exportación ===
 
-    nav = EpistemicNavigator()
-    fuentes_dict = {}
-    for padre in tree:
-        fuentes = [src for src, _ in nav.search(padre, k=3)]
-        fuentes_dict[padre] = fuentes
-        st.markdown(f"**{padre}**")
-        for fuente in fuentes:
-            st.markdown(f"- {fuente}")
-
-    st.markdown("---")
-
-    # --------- CONTEXTUAL GENERATOR: RESPUESTA A SUBPREGUNTAS ---------
-    st.subheader("🔹 Generación de contexto jurídico (simulada)")
-    st.caption("📑 Contexto generado con IA adaptada a PI. En el futuro, cada respuesta será validada automáticamente por el corpus legal.")
-
-    cg = ContextualGenerator()
-    respuestas = {}
-    for padre in tree:
-        if st.button(f"Generar contexto para: {padre}"):
-            contexto = cg.generate(padre, fuentes_dict[padre])
-            respuestas[padre] = contexto
-            st.markdown(f"**Respuesta generada:** {contexto}")
-
-    st.markdown("---")
-
-    # --------- REASONING TRACKER Y EXPORTACIÓN ---------
-    st.subheader("🔹 Reasoning Tracker: Historial y descarga")
-    st.markdown("📝 Puedes descargar todo tu razonamiento y fuentes como CSV. Este registro es clave para auditoría, docencia y compliance.")
-
-    tracker_data = []
-    for padre in tree:
-        tracker_data.append({
-            "subpregunta": padre,
-            "fuentes": "; ".join(fuentes_dict[padre]),
-            "respuesta": respuestas.get(padre, "")
-        })
-    df_tracker = pd.DataFrame(tracker_data)
-
-    csv_buffer = io.StringIO()
-    df_tracker.to_csv(csv_buffer, index=False)
+if st.session_state.tracker:
+    st.header("🧭 Reasoning Tracker (Auditoría del razonamiento)")
+    df = pd.DataFrame(st.session_state.tracker)
+    st.dataframe(df, use_container_width=True)
     st.download_button(
-        label="⬇️ Descargar Reasoning Tracker (CSV)",
-        data=csv_buffer.getvalue(),
-        file_name=f"reasoning_tracker_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-        mime='text/csv'
+        label="Descargar Reasoning Tracker como CSV",
+        data=df.to_csv(index=False).encode(),
+        file_name="reasoning_tracker.csv",
+        mime="text/csv"
     )
 
-st.info("""
-🔒 **Demo:** Algunas funcionalidades avanzadas (grafo PI real, PathRAG, validación epistémica automática) están en fase de desarrollo.  
-Consulta la documentación del proyecto para más información.
+# === 7. Explicaciones pedagógicas para ANECA, abogados y docentes ===
+with st.expander("¿Cómo funciona este MVP? (Explicación para abogados y docentes)"):
+    st.markdown("""
+**Visión general:**
+- La aplicación permite analizar cualquier consulta de propiedad intelectual y desglosarla en subpreguntas, siguiendo la metodología de 'El Código Deliberativo'.
+- El usuario puede generar contexto legal relevante para cada subpregunta de manera independiente, validando la respuesta, sus fuentes y su respaldo epistémico.
+- Cada acción se registra automáticamente en el Reasoning Tracker para permitir auditoría y transparencia total (muy útil para ANECA y entornos profesionales).
+
+**¿Qué es cada parte?**
+- **Árbol de Subpreguntas:** Estructura jerárquica del problema legal, permitiendo atacar el caso desde todas sus dimensiones.
+- **Generador de Contexto:** Extrae doctrina, leyes y jurisprudencia relevantes para cada subpregunta, simulando el razonamiento experto de un abogado.
+- **Reasoning Tracker:** Registro auditable y exportable de cada paso, fuentes citadas y validación epistémica. Ideal para justificar la calidad del razonamiento y la trazabilidad.
 """)
