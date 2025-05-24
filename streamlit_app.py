@@ -132,3 +132,18 @@ st.markdown("""
 - **Permite aprendizaje y uso profesional desde el primer día.**
 - **Siguiente Sprint:** Integrar corpus legal real, añadir PathRAG avanzado, grafo PI navegable, y validación doctrinal automática.
 """)
+st.subheader("Visualización estructurada del razonamiento (ASCII)")
+tree_ascii = """
+[¿Cómo se protege una obra bajo PI?]
+    ├── [¿Qué se considera obra?]
+    │       ├── [Requisitos de originalidad]
+    │       └── [Ejemplos de obras]
+    ├── [¿Cuáles son los derechos del autor?]
+    │       ├── [Derechos morales]
+    │       └── [Derechos patrimoniales]
+    └── [¿Qué límites existen a la protección?]
+            ├── [Excepciones y limitaciones]
+            └── [Duración de la protección]
+"""
+st.code(tree_ascii, language="text")
+st.markdown("_Esta visualización ayuda a entender la lógica y profundidad del análisis jurídico._")
