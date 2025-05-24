@@ -2,33 +2,33 @@
 
 class ContextualGenerator:
     """
-    Genera contexto legal simulado para una subpregunta dada, citando fuentes legales.
-    Devuelve: contexto (str), lista de fuentes (list), y validez epistémica (bool)
+    Simula la generación de contexto legal/doctrinal para una pregunta o subpregunta jurídica.
     """
-    def __init__(self, subpregunta):
-        self.subpregunta = subpregunta
+    # Simulación de un pequeño corpus legal con fuentes y “jurisprudencia”
+    CORPUS_SIMULADO = {
+        "¿Qué es una marca?": [
+            {"tipo": "ley", "fuente": "Ley 17/2001, de Marcas, Art. 4", "texto": "La marca es todo signo susceptible de representación gráfica..."},
+            {"tipo": "jurisprudencia", "fuente": "STS 1234/2018", "texto": "La Sala entiende que la marca sirve para diferenciar productos o servicios en el tráfico económico..."}
+        ],
+        "¿Puede registrarse como marca un color?": [
+            {"tipo": "ley", "fuente": "Ley 17/2001, Art. 4.2", "texto": "También podrán constituir marca los colores per se, siempre que sean susceptibles de representación gráfica."},
+            {"tipo": "jurisprudencia", "fuente": "TJUE C-104/01 Libertel", "texto": "El TJUE exige que la representación sea clara, precisa, autosuficiente y objetiva para registrar colores."}
+        ]
+    }
 
-    def generate(self):
-        # Demo pedagógico: cambia esta lógica por la real cuando integres PathRAG y grafo PI
-        ejemplos = {
-            "¿Qué es una marca comunitaria?": (
-                "Una marca comunitaria (ahora llamada Marca de la Unión Europea) es un título único que ofrece protección en todos los Estados miembros de la UE. Su base legal principal es el Reglamento (UE) 2017/1001.",
-                ["Reglamento (UE) 2017/1001", "BOE-A-2009-18532"],
-                True
-            ),
-            "¿Cuándo se considera agotado el derecho de distribución en la UE?": (
-                "El derecho de distribución se agota cuando un producto protegido se comercializa por primera vez en el Espacio Económico Europeo con consentimiento del titular. Ver Artículo 21 TRLPI y jurisprudencia TJUE.",
-                ["TRLPI art. 21", "Sentencia TJUE C-173/98"],
-                True
-            ),
-        }
-        # Devuelve ejemplo si existe, si no genera respuesta ficticia
-        contexto, fuentes, valido = ejemplos.get(
-            self.subpregunta,
-            (
-                f"Contexto simulado: análisis jurídico sobre '{self.subpregunta}'. (Este texto es una muestra; consulte legislación aplicable.)",
-                ["BOE", "Jurisprudencia relevante"],
-                True
-            )
-        )
-        return contexto, fuentes, valido
+    @classmethod
+    def generar_contexto(cls, pregunta):
+        """
+        Devuelve una lista de respuestas (leyes, jurisprudencia) relevantes para la pregunta.
+        """
+        docs = cls.CORPUS_SIMULADO.get(pregunta, [])
+        if not docs:
+            # Simula búsqueda PathRAG en todo el corpus
+            for k, v in cls.CORPUS_SIMULADO.items():
+                if pregunta.lower() in k.lower():
+                    return v
+            return [{
+                "tipo": "manual", "fuente": "Manual OEPM 2024",
+                "texto": "No se encuentra referencia legal directa, se recomienda consultar el Manual de Examen de la OEPM."
+            }]
+        return docs

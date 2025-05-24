@@ -3,7 +3,7 @@
 class InquiryEngine:
     """
     Generador de árbol de indagación (Inquiry Tree).
-    A partir de una pregunta inicial, genera subpreguntas y estructura de razonamiento.
+    Simula la descomposición de una pregunta jurídica en subpreguntas relevantes.
     """
     def __init__(self, pregunta, max_depth=2, max_width=2):
         self.pregunta = pregunta
@@ -12,8 +12,7 @@ class InquiryEngine:
 
     def _expand(self, nodo, depth):
         """
-        Expande el nodo generando subpreguntas simuladas (mockup).
-        Retorna un diccionario {subpregunta: hijos}
+        Expande el nodo generando subpreguntas simuladas.
         """
         if depth >= self.max_depth:
             return {}
@@ -25,25 +24,12 @@ class InquiryEngine:
 
     def generate(self):
         """
-        Devuelve un árbol de diccionarios con la estructura de preguntas/subpreguntas.
-        Ejemplo de salida:
-        {
-            '¿Qué es una marca?': {
-                'Subpregunta 1.1 sobre ...': {},
-                'Subpregunta 1.2 sobre ...': {}
-            }
-        }
+        Devuelve el árbol completo de preguntas y subpreguntas.
         """
         return {self.pregunta: self._expand(self.pregunta, 0)}
 
     def get_subquestions(self, nodo):
         """
-        Devuelve lista de subpreguntas directas de un nodo.
+        Devuelve las subpreguntas directas de un nodo.
         """
         return list(self._expand(nodo, 0).keys())
-
-# Ejemplo de uso (no se ejecuta al importar)
-if __name__ == "__main__":
-    ie = InquiryEngine("¿Qué es una marca comunitaria?", max_depth=2, max_width=2)
-    tree = ie.generate()
-    print(tree)
