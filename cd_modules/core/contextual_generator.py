@@ -1,46 +1,19 @@
-# cd_modules/core/contextual_generator.py
-
-"""
-Generador de contexto jurídico simulado para preguntas del árbol de razonamiento.
-Integra recuperación desde PathRAG PI y validación epistémica.
-"""
+# contextual_generator.py
 
 from cd_modules.core.pathrag_pi import recuperar_nodo_relevante
 from cd_modules.core.validador_epistemico import validar_contexto
 
 def generar_contexto(subpregunta):
     """
-    Genera un contexto jurídico simulado para una subpregunta,
-    recuperando un nodo relevante (PathRAG) y validando epistemológicamente.
-
-    Args:
-        subpregunta (str): Pregunta jurídica concreta del árbol
-
-    Returns:
-        dict: {
-            "contexto": str,
-            "fuente": str,
-            "validacion": str  # "validada", "parcial", "no validada"
-        }
+    Simula la generación de contexto, fuente y validación epistémica.
     """
-    nodo = recuperar_nodo_relevante(subpregunta)
-
-    # Simulamos la generación de contexto explicativo (mock)
-    contexto = f"Según el {nodo}, la cuestión de '{subpregunta}' está regulada en ese marco jurídico. \
-Debe interpretarse conforme a la jurisprudencia y doctrina aplicable."
-
-    # Aplicamos validador epistémico simulado
-    validacion = validar_contexto(nodo)
+    nodo_relevante = recuperar_nodo_relevante(subpregunta)
+    contexto = f"Análisis jurídico generado para: {subpregunta}. Basado en el nodo '{nodo_relevante}'."
+    fuente = f"Simulación basada en jurisprudencia relacionada con '{nodo_relevante}'."
+    validacion = validar_contexto(contexto)
 
     return {
         "contexto": contexto,
-        "fuente": nodo,
+        "fuente": fuente,
         "validacion": validacion
     }
-
-# Ejemplo de uso
-if __name__ == "__main__":
-    subp = "¿Quién puede ser autor de una obra?"
-    resultado = generar_contexto(subp)
-    for k, v in resultado.items():
-        print(f"{k}: {v}")
