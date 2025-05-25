@@ -149,3 +149,4 @@ with st.expander("¿Qué es el Reasoning Tracker?"):
     - Registra cada paso, fuente y nivel de validación.
     - Permite auditar decisiones jurídicas generadas.
     """)
+
