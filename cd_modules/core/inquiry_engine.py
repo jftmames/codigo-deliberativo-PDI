@@ -1,9 +1,15 @@
 # cd_modules/core/inquiry_engine.py
 
+SIMULATED_SUBTOPICS = [
+    "definición legal",
+    "jurisprudencia aplicable",
+    "excepciones",
+    "casos comparados",
+    "autoría en obras colectivas",
+    "derechos de menores de edad"
+]
+
 class InquiryEngine:
-    """
-    Generador de árbol de razonamiento (mockup).
-    """
     def __init__(self, pregunta, max_depth=2, max_width=2):
         self.pregunta = pregunta
         self.max_depth = max_depth
@@ -13,9 +19,10 @@ class InquiryEngine:
         if depth >= self.max_depth:
             return {}
         hijos = {}
-        for i in range(1, self.max_width + 1):
-            sub = f"Subpregunta {depth+1}.{i} sobre '{nodo}'"
-            hijos[sub] = self._expand(sub, depth + 1)
+        for i in range(self.max_width):
+            tema = SIMULATED_SUBTOPICS[i % len(SIMULATED_SUBTOPICS)]
+            subpregunta = f"{tema.capitalize()} relacionada con: {nodo}"
+            hijos[subpregunta] = self._expand(subpregunta, depth + 1)
         return hijos
 
     def generate(self):
