@@ -1,18 +1,28 @@
-# cd_modules/core/contextual_generator.py
+# inquiry_engine.py
 
-from langchain_openai import ChatOpenAI
+class InquiryEngine:
+    """
+    Genera un árbol jerárquico de razonamiento basado en subpreguntas.
+    Simula la estructura de una consulta jurídica deliberativa.
+    """
 
-class ContextualGenerator:
-    def __init__(self, api_key, model_name="gpt-3.5-turbo"):
-        self.api_key = api_key
-        self.model_name = model_name
+    def __init__(self, pregunta, max_depth=2, max_width=2):
+        self.pregunta = pregunta
+        self.max_depth = max_depth
+        self.max_width = max_width
 
-    def generar_contexto(self, pregunta, contexto):
-        llm = ChatOpenAI(model=self.model_name, temperature=0.2, api_key=self.api_key)
-        prompt = (
-            f"Eres un abogado especialista en propiedad intelectual. Responde únicamente usando el siguiente contexto legal y jurisprudencial.\n"
-            f"Pregunta: {pregunta}\n"
-            f"Contexto legal:\n{contexto}\n"
-            f"Respuesta:"
-        )
-        return llm.invoke(prompt).content
+    def _expand(self, nodo, depth):
+        if depth >= self.max_depth:
+            return {}
+        hijos = {}
+        for i in range(1, self.max_width + 1):
+            sub = f"Subpregunta {depth+1}.{i} sobre '{nodo}'"
+            hijos[sub] = self._expand(sub, depth + 1)
+        return hijos
+
+    def generate(self):
+        return {self.pregunta: self._expand(self.pregunta, 0)}
+
+    def get_subquestions(self, nodo):
+        return list(self._expand(nodo, 0).keys())
+
