@@ -1,11 +1,21 @@
-# pathrag_pi.py
+# cd_modules/core/pathrag_pi.py
 
-def recuperar_nodo_relevante(subpregunta):
+def recuperar_nodo_relevante(pregunta):
     """
-    Simulación de recuperación PathRAG: devuelve un nodo PI relevante ficticio.
+    Simula búsqueda en grafo PI. Devuelve 'nodo' y ruta conceptual.
     """
-    ejemplos = [
-        "autoría", "derechos morales", "cesión de derechos", "registro", "plagio", "originalidad"
-    ]
-    import random
-    return random.choice(ejemplos)
+    if "autor" in pregunta.lower():
+        return {
+            "nodo": "Autoría en PI",
+            "camino": ["Propiedad Intelectual", "Derechos de autor", "Sujetos"]
+        }
+    elif "obra colectiva" in pregunta.lower():
+        return {
+            "nodo": "Obra colectiva",
+            "camino": ["Obras", "Clasificación", "Obra colectiva"]
+        }
+    else:
+        return {
+            "nodo": "Concepto general de PI",
+            "camino": ["Propiedad Intelectual", "Conceptos generales"]
+        }

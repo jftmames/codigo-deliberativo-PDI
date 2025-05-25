@@ -1,13 +1,15 @@
-# validador_epistemico.py
+# cd_modules/core/validador_epistemico.py
 
-def validar_contexto(texto):
+def validar_contexto(nodo, contexto):
     """
-    Simulación de validación epistémica:
-    Devuelve una de tres categorías: 'validada', 'parcial', 'no validada'
+    Simula validación epistémica:
+    - Si contiene 'Ley', se valida.
+    - Si contiene 'según doctrina', parcial.
+    - Si no, no validada.
     """
-    import random
-    return random.choices(
-        ["validada", "parcial", "no validada"],
-        weights=[0.5, 0.3, 0.2],
-        k=1
-    )[0]
+    if "Ley" in contexto:
+        return "validada"
+    elif "doctrina" in contexto.lower():
+        return "parcial"
+    else:
+        return "no validada"

@@ -3,13 +3,13 @@ import pandas as pd
 from cd_modules.core.inquiry_engine import InquiryEngine
 from cd_modules.core.contextual_generator import generar_contexto
 
-# CONFIGURACIÓN DE LA APP
-st.set_page_config(page_title="Demo PI - Código Deliberativo", layout="wide")
-st.title("📚 Demo MVP - Derecho de la Propiedad Intelectual")
-st.markdown("Esta demo simula razonamiento jurídico automatizado, con validación epistémica visible.")
+# CONFIGURACIÓN INICIAL
+st.set_page_config(page_title="Código Deliberativo – PI", layout="wide")
+st.title("📚 MVP – Derecho de la Propiedad Intelectual")
+st.markdown("Simulación de razonamiento jurídico con validación epistémica auditada.")
 
-# SIDEBAR
-st.sidebar.header("⚙️ Configuración del árbol")
+# SIDEBAR – Configuración
+st.sidebar.header("⚙️ Configuración")
 pregunta = st.sidebar.text_input("Pregunta principal", "¿Quién puede ser autor de una obra?")
 max_depth = st.sidebar.slider("Profundidad", 1, 3, 2)
 max_width = st.sidebar.slider("Anchura", 1, 4, 2)
@@ -17,11 +17,12 @@ max_width = st.sidebar.slider("Anchura", 1, 4, 2)
 ie = InquiryEngine(pregunta, max_depth=max_depth, max_width=max_width)
 tree = ie.generate()
 
-# TRACKER
+# TRACKER DE RAZONAMIENTO
 if "tracker" not in st.session_state:
     st.session_state.tracker = []
 
-# UX: BADGE
+# FUNCIONES AUXILIARES
+
 def badge_validacion(tipo):
     if tipo == "validada":
         return '<span style="color: white; background-color: #28a745; padding: 3px 8px; border-radius: 6px;">✅ Validada</span>'
@@ -33,7 +34,6 @@ def badge_validacion(tipo):
 def esta_respondido(nodo):
     return any(x["Subpregunta"] == nodo for x in st.session_state.tracker)
 
-# CONTADOR
 def contar_nodos(tree):
     total = 0
     def contar(hijos):
@@ -49,7 +49,7 @@ def contar_nodos(tree):
 def contar_respondidos():
     return len(st.session_state.tracker)
 
-# GENERACIÓN EN MASA
+# GENERAR TODO
 def generar_todo(tree):
     def gen(hijos):
         for nodo, subhijos in hijos.items():
@@ -73,7 +73,7 @@ def generar_todo(tree):
             })
         gen(hijos)
 
-# VISUALIZACIÓN DEL ÁRBOL
+# VISUALIZACIÓN DE ÁRBOL
 def mostrar_arbol(nodo, hijos, nivel=0):
     margen = "  " * nivel
     data = next((x for x in st.session_state.tracker if x["Subpregunta"] == nodo), None)
@@ -104,13 +104,14 @@ def mostrar_arbol(nodo, hijos, nivel=0):
     for hijo, subhijos in hijos.items():
         mostrar_arbol(hijo, subhijos, nivel + 1)
 
-# BOTÓN GENERAR TODO
+# BOTÓN GLOBAL
 st.button("🧠 Generar TODO el contexto", on_click=lambda: generar_todo(tree), type="primary")
 
-# BARRA DE PROGRESO
+# BARRA DE PROGRESO (fix aplicado aquí)
 total = contar_nodos(tree)
 respondidos = contar_respondidos()
-st.progress(respondidos / total if total else 0, text=f"Progreso: {respondidos}/{total} respondidos")
+progreso = min(respondidos / total, 1.0) if total else 0
+st.progress(progreso, text=f"Progreso: {respondidos}/{total} respondidos")
 
 # ÁRBOL
 st.subheader("🔍 Árbol de razonamiento jurídico")
