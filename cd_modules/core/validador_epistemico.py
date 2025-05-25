@@ -1,9 +1,13 @@
-# cd_modules/core/validador_epistemico.py
+# validador_epistemico.py
 
-def validador_epistemico(respuesta, contexto):
-    # Chequeo sencillo de grounding: ¿los términos legales están en la respuesta?
-    validaciones = {}
-    for fragmento in contexto.split('\n'):
-        clave = fragmento.split(":")[0].strip().lower()
-        validaciones[clave] = clave in respuesta.lower()
-    return validaciones
+def validar_contexto(contexto):
+    """
+    Simula una validación epistémica.
+    Puede ampliarse con corpus, heurísticas o IA legal.
+    """
+    if "Reglamento" in contexto or "OEPM" in contexto:
+        return "validada", "Reglamento 2017/1001"
+    elif "persona física" in contexto:
+        return "parcial", "Doctrina general sobre autoría"
+    else:
+        return "no validada", "Sin referencia legal clara"
