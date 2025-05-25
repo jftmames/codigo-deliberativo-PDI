@@ -1,8 +1,9 @@
 # File: streamlit_app.py
 """
-Refactorización de la UI de Streamlit para delegar en MainEngine.
+Refactorización de la UI de Streamlit para delegar en MainEngine e incorporar visualización del mapeo ontológico.
 """
 import streamlit as st
+import json
 from cd_modules.core.main_engine import MainEngine
 
 # Configuración inicial
@@ -19,7 +20,6 @@ def main():
     user_context = None
     if user_ctx_raw:
         try:
-            import json
             user_context = json.loads(user_ctx_raw)
         except json.JSONDecodeError:
             st.error("Contexto no es un JSON válido.")
@@ -29,7 +29,19 @@ def main():
         with st.spinner("Procesando..."):
             result = engine.process_question(question, user_context)
 
-        # Mostrar resultado
+        # Mostrar conceptos identificados
+        st.subheader("Conceptos identificados")
+        if result.get('concepts'):
+            st.write(result['concepts'])
+        else:
+            st.write("No se identificaron conceptos.")
+
+        # Mostrar mapeo ontológico si está disponible
+        ontology_graph = result.get('ontology_graph')
+        if ontology_graph:
+            st.subheader("Mapa Ontológico")
+            st.graphviz_chart(ontology_graph)
+
         st.subheader("Respuesta Jurídica")
         st.write(result['answer'])
 
