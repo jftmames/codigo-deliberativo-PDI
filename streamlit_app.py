@@ -3,7 +3,6 @@ import pandas as pd
 from cd_modules.core.inquiry_engine import InquiryEngine
 from cd_modules.core.informe_tracker import generar_markdown_reporte
 
-
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Demo PI - Código Deliberativo", layout="wide")
 st.title("📚 Demo MVP - Derecho de la Propiedad Intelectual")
