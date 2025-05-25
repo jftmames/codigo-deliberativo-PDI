@@ -1,22 +1,18 @@
 # cd_modules/core/contextual_generator.py
 
-class ContextualGenerator:
-    """
-    Simula la generación de contexto legal para una pregunta/subpregunta.
-    En futuro, conecta con LLM, PathRAG o bases legales reales.
-    """
-    def __init__(self, pregunta):
-        self.pregunta = pregunta
+from langchain_openai import ChatOpenAI
 
-    def get_context(self):
-        # Aquí simulas una respuesta bien fundamentada.
-        ejemplos = [
-            f"Según el artículo 4 de la Directiva 2015/2436/UE, {self.pregunta} implica analizar los requisitos de distintividad.",
-            f"La jurisprudencia reciente del TJUE (asunto C-25/19) aborda {self.pregunta} y los criterios de registrabilidad.",
-            f"El BOE recoge en su última actualización la doctrina sobre {self.pregunta}.",
-            f"La OEPM señala que {self.pregunta} debe interpretarse conforme a la finalidad protectora de la PI."
-        ]
-        
-        # Rotar ejemplo para variar un poco
-        idx = abs(hash(self.pregunta)) % len(ejemplos)
-        return ejemplos[idx]
+class ContextualGenerator:
+    def __init__(self, api_key, model_name="gpt-3.5-turbo"):
+        self.api_key = api_key
+        self.model_name = model_name
+
+    def generar_contexto(self, pregunta, contexto):
+        llm = ChatOpenAI(model=self.model_name, temperature=0.2, api_key=self.api_key)
+        prompt = (
+            f"Eres un abogado especialista en propiedad intelectual. Responde únicamente usando el siguiente contexto legal y jurisprudencial.\n"
+            f"Pregunta: {pregunta}\n"
+            f"Contexto legal:\n{contexto}\n"
+            f"Respuesta:"
+        )
+        return llm.invoke(prompt).content
