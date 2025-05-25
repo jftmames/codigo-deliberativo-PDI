@@ -1,6 +1,5 @@
-# cd_modules/core/inquiry_engine.py
-
-from cd_modules.core.extractor_conceptual import extraer_conceptos
+import streamlit as st
+from cd_modules.core.consultor_ontologia import generar_subpreguntas_desde_ontologia, buscar_conceptos_relacionados
 
 class InquiryEngine:
     def __init__(self, pregunta, max_depth=2, max_width=2):
@@ -12,20 +11,19 @@ class InquiryEngine:
         if depth >= self.max_depth:
             return {}
 
-        conceptos = extraer_conceptos(nodo)
-
-        if conceptos:
-            subpreguntas = [f"¿Qué implica el concepto de '{c}' en este contexto?" for c in conceptos]
-        else:
-            subpreguntas = [
-                f"¿Qué dice la legislación sobre '{nodo}'?",
-                f"¿Existe jurisprudencia relevante sobre '{nodo}'?",
-                f"¿Qué interpretación doctrinal existe sobre '{nodo}'?",
-                f"¿Cómo afecta la legislación europea a '{nodo}'?"
-            ]
-
+        subpreguntas = generar_subpreguntas_desde_ontologia(nodo)
         hijos = {}
+
         for i, sub in enumerate(subpreguntas[:self.max_width]):
+            # Registrar paso en el Reasoning Tracker
+            ruta_ontologica = buscar_conceptos_relacionados(nodo)
+            st.session_state.tracker.append({
+                "nodo_padre": nodo,
+                "subpregunta": sub,
+                "nivel": depth,
+                "ruta": ruta_ontologica
+            })
+
             hijos[sub] = self._expand(sub, depth + 1)
         return hijos
 

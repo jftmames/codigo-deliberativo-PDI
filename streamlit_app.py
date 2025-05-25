@@ -150,4 +150,19 @@ with st.expander("🧠 ¿Qué es el Reasoning Tracker?"):
     - Registra cada paso, fuente y nivel de validación.
     - Permite auditar decisiones jurídicas generadas.
     """)
+from cd_modules.core.informe_tracker import generar_markdown_reporte
+
+# Mostrar y exportar informe
+if st.session_state.tracker:
+    st.subheader("📄 Informe trazable (Markdown)")
+    markdown = generar_markdown_reporte(pregunta, st.session_state.tracker)
+    st.code(markdown, language="markdown")
+
+    # Botón de descarga
+    st.download_button(
+        label="⬇️ Descargar informe en .md",
+        data=markdown,
+        file_name="informe_PI.md",
+        mime="text/markdown"
+    )
 
