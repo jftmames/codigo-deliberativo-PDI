@@ -23,12 +23,12 @@ class InquiryEngine:
         for i, sub in enumerate(subpreguntas[:self.max_width]):
             ruta_ontologica = buscar_conceptos_relacionados(nodo)
 
-            # Registro de cada paso en el Reasoning Tracker
             st.session_state.tracker.append({
                 "nodo_padre": nodo,
                 "subpregunta": sub,
                 "nivel": depth,
-                "ruta": ruta_ontologica
+                "ruta": ruta_ontologica,
+                "validacion": "no validada"  # Se puede actualizar luego con análisis real
             })
 
             hijos[sub] = self._expand(sub, depth + 1)
