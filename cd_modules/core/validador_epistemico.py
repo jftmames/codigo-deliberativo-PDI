@@ -1,15 +1,21 @@
 # cd_modules/core/validador_epistemico.py
 
+import re
+
 def validar_contexto(nodo, contexto):
-    """
-    Simula validación epistémica:
-    - Si contiene 'Ley', se valida.
-    - Si contiene 'según doctrina', parcial.
-    - Si no, no validada.
-    """
-    if "Ley" in contexto:
+    contexto = contexto.lower()
+
+    # Validación legal explícita
+    if re.search(r"ley\s+\d+/\d+", contexto) and "art" in contexto:
         return "validada"
-    elif "doctrina" in contexto.lower():
+    
+    # Jurisprudencia reconocible
+    if "sentencia" in contexto and ("tjue" in contexto or "ts" in contexto or "audiencia" in contexto):
         return "parcial"
-    else:
-        return "no validada"
+
+    # Doctrina o fuentes no oficiales
+    if "doctrina" in contexto or "según" in contexto:
+        return "parcial"
+
+    # Ninguna fuente válida
+    return "no validada"
