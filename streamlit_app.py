@@ -1,64 +1,43 @@
+# File: streamlit_app.py
+"""
+Refactorización de la UI de Streamlit para delegar en MainEngine.
+"""
 import streamlit as st
-import pandas as pd
-from cd_modules.core.inquiry_engine import InquiryEngine
-from cd_modules.core.informe_tracker import generar_markdown_reporte
+from cd_modules.core.main_engine import MainEngine
 
-# --- CONFIGURACIÓN INICIAL ---
-st.set_page_config(page_title="Demo PI - Código Deliberativo", layout="wide")
-st.title("📚 Demo MVP - Derecho de la Propiedad Intelectual")
-st.markdown("Esta demo simula razonamiento jurídico automatizado, con validación epistémica visible.")
+# Configuración inicial
+def main():
+    st.set_page_config(page_title="Código Deliberativo PDI", layout="wide")
+    st.title("Código Deliberativo PDI")
 
-# --- SIDEBAR: Parámetros del árbol ---
-st.sidebar.header("⚙️ Configuración del árbol")
-pregunta = st.sidebar.text_input("Pregunta principal", "¿Quién puede ser autor de una obra?")
-max_depth = st.sidebar.slider("Profundidad", 1, 3, 2)
-max_width = st.sidebar.slider("Anchura", 1, 4, 2)
+    # Instanciar MainEngine
+    engine = MainEngine()
 
-# --- Inicialización del Reasoning Tracker ---
-if "tracker" not in st.session_state:
-    st.session_state.tracker = []
+    # Input de usuario
+    question = st.text_area("Escribe tu pregunta:")
+    user_ctx_raw = st.text_area("Contexto de usuario (JSON, opcional):", height=100)
+    user_context = None
+    if user_ctx_raw:
+        try:
+            import json
+            user_context = json.loads(user_ctx_raw)
+        except json.JSONDecodeError:
+            st.error("Contexto no es un JSON válido.")
+            return
 
-# --- Generación del árbol ---
-ie = InquiryEngine(pregunta, max_depth=max_depth, max_width=max_width)
-tree = ie.generate()
+    if st.button("Procesar pregunta"):
+        with st.spinner("Procesando..."):
+            result = engine.process_question(question, user_context)
 
-# --- UX: badge de validación ---
-def badge_validacion(tipo):
-    if tipo == "validada":
-        return '<span style="color: white; background-color: #28a745; padding: 3px 8px; border-radius: 6px;">✅ Validada</span>'
-    elif tipo == "parcial":
-        return '<span style="color: black; background-color: #ffc107; padding: 3px 8px; border-radius: 6px;">⚠️ Parcial</span>'
-    else:
-        return '<span style="color: white; background-color: #dc3545; padding: 3px 8px; border-radius: 6px;">❌ No validada</span>'
+        # Mostrar resultado
+        st.subheader("Respuesta Jurídica")
+        st.write(result['answer'])
 
-# --- Visualización del árbol deliberativo ---
-def mostrar_arbol(nodo, hijos, nivel=0):
-    st.markdown(f"{'— ' * nivel}**{nodo}**")
+        st.subheader("Logs de Razonamiento")
+        st.json(result['logs'])
 
-    data = next((x for x in st.session_state.tracker if x["subpregunta"] == nodo), None)
-    if data:
-        st.markdown(badge_validacion(data["validacion"]), unsafe_allow_html=True)
-        if data.get("ruta"):
-            for ruta in data["ruta"]:
-                st.markdown(f"{' ' * (nivel * 2)}↳ Ruta ontológica: `{' → '.join(ruta)}`")
+        st.subheader("Informe de Trazabilidad")
+        st.markdown(result['report'])
 
-    for hijo, subhijos in hijos.items():
-        mostrar_arbol(hijo, subhijos, nivel + 1)
-
-# --- Mostrar el árbol generado ---
-st.subheader("🌳 Árbol de razonamiento legal")
-raiz, hijos = list(tree.items())[0]
-mostrar_arbol(raiz, hijos)
-
-# --- Exportación del informe ---
-if st.session_state.tracker:
-    st.subheader("📄 Informe trazable (Markdown)")
-    markdown = generar_markdown_reporte(pregunta, st.session_state.tracker)
-    st.code(markdown, language="markdown")
-
-    st.download_button(
-        label="⬇️ Descargar informe en .md",
-        data=markdown,
-        file_name="informe_PI.md",
-        mime="text/markdown"
-    )
+if __name__ == "__main__":
+    main()
