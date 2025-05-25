@@ -78,7 +78,7 @@ En producción, ampliamos el grafo PI y el corpus legal, y sustituimos la simula
     """)
 
 with st.expander("Demo visual: Grafo PI y PathRAG (mockup)"):
-    st.image("A_flowchart_visualization_diagram_titled_\"PI:_Ejem.png", caption="Grafo PI + PathRAG – Relaciones y caminos entre conceptos jurídicos.")
+    st.image("grafo_pi_pathrag.png", caption="Grafo PI + PathRAG – Relaciones y caminos entre conceptos jurídicos.")
 
 st.info("MVP listo para ANECA y demo profesional. Arquitectura modular, exportable y 100% trazable.")
 
