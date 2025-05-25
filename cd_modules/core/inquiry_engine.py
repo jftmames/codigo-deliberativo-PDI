@@ -1,5 +1,6 @@
 import streamlit as st
-from cd_modules.core.consultor_ontologia import generar_subpreguntas_desde_ontologia, buscar_conceptos_relacionados
+
+from .consultor_ontologia import generar_subpreguntas_desde_ontologia
 
 class InquiryEngine:
     def __init__(self, pregunta, max_depth=2, max_width=2):

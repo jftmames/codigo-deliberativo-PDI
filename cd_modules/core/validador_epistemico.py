@@ -1,4 +1,5 @@
 # cd_modules/core/validador_epistemico.py
+from .consultor_ontologia import generar_subpreguntas_desde_ontologia
 
 import re
 

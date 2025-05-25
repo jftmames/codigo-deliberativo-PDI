@@ -2,6 +2,8 @@
 
 from cd_modules.core.pathrag_pi import recuperar_nodo_relevante
 from cd_modules.core.validador_epistemico import validar_contexto
+from .consultor_ontologia import generar_subpreguntas_desde_ontologia
+
 
 def generar_contexto(nodo):
     """

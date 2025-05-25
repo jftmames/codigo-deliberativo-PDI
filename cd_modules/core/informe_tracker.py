@@ -1,5 +1,6 @@
 # cd_modules/core/informe_tracker.py
 from cd_modules.core.respuesta_juridica import generar_respuesta
+from .consultor_ontologia import generar_subpreguntas_desde_ontologia
 
 def generar_markdown_reporte(pregunta_principal, tracker):
     md = f"# Informe de Razonamiento Jurídico\n\n"

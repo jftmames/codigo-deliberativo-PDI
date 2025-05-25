@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from cd_modules.core.inquiry_engine import InquiryEngine
 from cd_modules.core.contextual_generator import generar_contexto
+from cd_modules.core.inquiry_engine import InquiryEngine
+
 
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="Demo PI - Código Deliberativo", layout="wide")
