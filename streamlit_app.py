@@ -79,7 +79,8 @@ def generar_todo(tree):
 # --- Visualización del árbol ---
 def mostrar_arbol(nodo, hijos, nivel=0):
     margen = "  " * nivel
-    data = next((x for x in st.session_state.tracker if x["Subpregunta"] == nodo), None)
+    data = next((x for x in st.session_state.tracker if x["subpregunta"] == nodo), None)
+
 
     with st.container():
         col1, col2 = st.columns([9, 1])
