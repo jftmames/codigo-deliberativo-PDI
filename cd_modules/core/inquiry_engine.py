@@ -2,8 +2,8 @@
 
 class InquiryEngine:
     """
-    Generador de árbol de indagación (Inquiry Tree).
-    Simula la descomposición de una pregunta jurídica en subpreguntas relevantes.
+    Genera un árbol de razonamiento a partir de una pregunta raíz.
+    Puede ampliarse para usar LLM o un grafo real en el futuro.
     """
     def __init__(self, pregunta, max_depth=2, max_width=2):
         self.pregunta = pregunta
@@ -12,24 +12,18 @@ class InquiryEngine:
 
     def _expand(self, nodo, depth):
         """
-        Expande el nodo generando subpreguntas simuladas.
+        Expande recursivamente el árbol generando subpreguntas (mockup).
         """
         if depth >= self.max_depth:
             return {}
         hijos = {}
         for i in range(1, self.max_width + 1):
-            subpregunta = f"Subpregunta {depth+1}.{i} sobre '{nodo}'"
-            hijos[subpregunta] = self._expand(subpregunta, depth + 1)
+            sub = f"Subpregunta {depth+1}.{i} sobre '{nodo}'"
+            hijos[sub] = self._expand(sub, depth + 1)
         return hijos
 
     def generate(self):
         """
-        Devuelve el árbol completo de preguntas y subpreguntas.
+        Devuelve el árbol de razonamiento en formato dict anidado.
         """
         return {self.pregunta: self._expand(self.pregunta, 0)}
-
-    def get_subquestions(self, nodo):
-        """
-        Devuelve las subpreguntas directas de un nodo.
-        """
-        return list(self._expand(nodo, 0).keys())

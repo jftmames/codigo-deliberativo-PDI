@@ -2,33 +2,21 @@
 
 class ContextualGenerator:
     """
-    Simula la generación de contexto legal/doctrinal para una pregunta o subpregunta jurídica.
+    Simula la generación de contexto legal para una pregunta/subpregunta.
+    En futuro, conecta con LLM, PathRAG o bases legales reales.
     """
-    # Simulación de un pequeño corpus legal con fuentes y “jurisprudencia”
-    CORPUS_SIMULADO = {
-        "¿Qué es una marca?": [
-            {"tipo": "ley", "fuente": "Ley 17/2001, de Marcas, Art. 4", "texto": "La marca es todo signo susceptible de representación gráfica..."},
-            {"tipo": "jurisprudencia", "fuente": "STS 1234/2018", "texto": "La Sala entiende que la marca sirve para diferenciar productos o servicios en el tráfico económico..."}
-        ],
-        "¿Puede registrarse como marca un color?": [
-            {"tipo": "ley", "fuente": "Ley 17/2001, Art. 4.2", "texto": "También podrán constituir marca los colores per se, siempre que sean susceptibles de representación gráfica."},
-            {"tipo": "jurisprudencia", "fuente": "TJUE C-104/01 Libertel", "texto": "El TJUE exige que la representación sea clara, precisa, autosuficiente y objetiva para registrar colores."}
-        ]
-    }
+    def __init__(self, pregunta):
+        self.pregunta = pregunta
 
-    @classmethod
-    def generar_contexto(cls, pregunta):
-        """
-        Devuelve una lista de respuestas (leyes, jurisprudencia) relevantes para la pregunta.
-        """
-        docs = cls.CORPUS_SIMULADO.get(pregunta, [])
-        if not docs:
-            # Simula búsqueda PathRAG en todo el corpus
-            for k, v in cls.CORPUS_SIMULADO.items():
-                if pregunta.lower() in k.lower():
-                    return v
-            return [{
-                "tipo": "manual", "fuente": "Manual OEPM 2024",
-                "texto": "No se encuentra referencia legal directa, se recomienda consultar el Manual de Examen de la OEPM."
-            }]
-        return docs
+    def get_context(self):
+        # Aquí simulas una respuesta bien fundamentada.
+        ejemplos = [
+            f"Según el artículo 4 de la Directiva 2015/2436/UE, {self.pregunta} implica analizar los requisitos de distintividad.",
+            f"La jurisprudencia reciente del TJUE (asunto C-25/19) aborda {self.pregunta} y los criterios de registrabilidad.",
+            f"El BOE recoge en su última actualización la doctrina sobre {self.pregunta}.",
+            f"La OEPM señala que {self.pregunta} debe interpretarse conforme a la finalidad protectora de la PI."
+        ]
+        
+        # Rotar ejemplo para variar un poco
+        idx = abs(hash(self.pregunta)) % len(ejemplos)
+        return ejemplos[idx]
