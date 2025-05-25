@@ -1,24 +1,17 @@
-# cd_modules/core/pathrag_pi.py
+# pathrag_pi.py
 
-class PathRAGPI:
+def recuperar_info_relacionada(pregunta):
     """
-    Simulador de recuperación PathRAG sobre grafo PI. Devuelve contexto relevante.
+    Simulación de PathRAG: recuperación contextual basada en relaciones jurídicas.
+    En un MVP real, esto se conecta con grafos legales u ontologías PI.
     """
-    def __init__(self):
-        # Simulación de corpus legal y nodos del grafo
-        self.corpus = {
-            "marca comunitaria": "El Reglamento (UE) 2017/1001 regula la marca de la Unión Europea...",
-            "nulidad": "Art. 59 Reglamento (UE) 2017/1001: Será declarada la nulidad cuando la marca carezca de distintividad...",
-            "distintividad": "Sentencia TJUE Libertel: La distintividad es un requisito esencial para la validez de la marca...",
-        }
+    ejemplos_simulados = {
+        "autor": "el autor es la persona física que crea una obra literaria, artística o científica",
+        "marca": "una marca puede declararse nula si carece de carácter distintivo según el Reglamento 2017/1001",
+        "registro": "el registro en la OEPM proporciona una presunción de validez de derechos",
+    }
+    for clave, valor in ejemplos_simulados.items():
+        if clave.lower() in pregunta.lower():
+            return valor
+    return "el análisis debe hacerse conforme al principio de especialidad y la normativa aplicable"
 
-    def retrieve(self, pregunta):
-        # Simula búsqueda por palabras clave en los nodos
-        contexto = []
-        path = []
-        for k, v in self.corpus.items():
-            if k in pregunta.lower():
-                contexto.append(v)
-                path.append(k)
-        # Siempre devuelve los tres para el ejemplo
-        return "\n".join(self.corpus.values()), list(self.corpus.keys())
