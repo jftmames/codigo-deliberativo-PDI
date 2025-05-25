@@ -8,8 +8,6 @@ class InquiryEngine:
         self.pregunta = pregunta
         self.max_depth = max_depth
         self.max_width = max_width
-
-        # Inicializa el Reasoning Tracker si no existe
         if "tracker" not in st.session_state:
             st.session_state.tracker = []
 
@@ -20,18 +18,17 @@ class InquiryEngine:
         subpreguntas = generar_subpreguntas_desde_ontologia(nodo)
         hijos = {}
 
-        for i, sub in enumerate(subpreguntas[:self.max_width]):
-            ruta_ontologica = buscar_conceptos_relacionados(nodo)
-
-            st.session_state.tracker.append({
-                "nodo_padre": nodo,
-                "subpregunta": sub,
-                "nivel": depth,
-                "ruta": ruta_ontologica,
-                "validacion": "no validada"  # Se puede actualizar luego con análisis real
-            })
-
-            hijos[sub] = self._expand(sub, depth + 1)
+        for sub in subpreguntas[:self.max_width]:
+            if sub != nodo:  # evita anidamiento infinito
+                ruta_ontologica = buscar_conceptos_relacionados(nodo)
+                st.session_state.tracker.append({
+                    "nodo_padre": nodo,
+                    "subpregunta": sub,
+                    "nivel": depth,
+                    "ruta": ruta_ontologica,
+                    "validacion": "no validada"
+                })
+                hijos[sub] = self._expand(sub, depth + 1)
 
         return hijos
 

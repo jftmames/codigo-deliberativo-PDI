@@ -3,21 +3,16 @@
 ONTOLOGIA_PI = {
     "Propiedad Intelectual": {
         "Derechos de autor": {
-            "Autoría": ["persona física", "obra original", "derechos morales"],
-            "Obras": ["literarias", "musicales", "audiovisuales", "colectivas"]
+            "Autoría": ["Obras", "Autores", "Originalidad"],
+            "Obras": ["Literaria", "Artística", "Científica"]
         },
-        "Propiedad Industrial": {
-            "Marcas": ["denominativas", "figurativas", "sonoras", "tridimensionales"],
-            "Patentes": ["invención técnica", "modelo de utilidad", "requisitos"],
-            "Diseños industriales": ["aspecto exterior", "forma", "color"]
+        "Patentes": {
+            "Patentabilidad": ["Invenciones", "Software", "Procedimientos"],
+            "Invenciones": ["Novedad", "Actividad inventiva"]
         },
-        "Software": {
-            "Protección por derechos de autor": ["código fuente", "estructura", "interfaz"],
-            "Patentabilidad": ["invención técnica", "novedad", "actividad inventiva"]
-        },
-        "Inteligencia Artificial": {
-            "Autoría automatizada": ["creador humano vs máquina", "originalidad"],
-            "Protección": ["derechos conexos", "titularidad", "tratamiento jurídico"]
+        "Marcas": {
+            "Tipos": ["Denominativa", "Gráfica", "Sonora"],
+            "Registro": ["Procedimiento", "Requisitos"]
         }
     }
 }
