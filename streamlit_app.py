@@ -77,8 +77,8 @@ with st.expander("¿Cómo funciona este MVP?"):
 En producción, ampliamos el grafo PI y el corpus legal, y sustituimos la simulación por integración real con bases BOE, OEPM, TJUE, LlamaIndex, etc. El diseño es extensible.
     """)
 
-with st.expander("Demo visual: Grafo PI y PathRAG (mockup)"):
-    st.image("grafo_pi_pathrag.png", caption="Grafo PI + PathRAG – Relaciones y caminos entre conceptos jurídicos.")
+#with st.expander("Demo visual: Grafo PI y PathRAG (mockup)"):
+    #st.image("grafo_pi_pathrag.png", caption="Grafo PI + PathRAG – Relaciones y caminos entre conceptos jurídicos.")
 
 st.info("MVP listo para ANECA y demo profesional. Arquitectura modular, exportable y 100% trazable.")
 
