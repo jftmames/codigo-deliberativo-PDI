@@ -1,151 +1,129 @@
 import streamlit as st
-from collections import deque
 import pandas as pd
-import datetime
-import streamlit as st
 
+from cd_modules.core.inquiry_engine import InquiryEngine
+from cd_modules.core.contextual_generator import ContextualGenerator
 
-# --- Mockups / Simulaciones ---
-CORPUS_LEGAL = {
-    "¿Qué es una marca?": [
-        {"fuente": "Ley 17/2001, de Marcas, Art. 4", "texto": "La marca es todo signo susceptible de representación gráfica que sirva para distinguir en el mercado los productos o servicios de una empresa de los de otras."},
-        {"fuente": "Sentencia TJUE C-104/01", "texto": "Requisitos para la protección de la marca."}
-    ],
-    "¿Cuándo puede una marca ser declarada nula?": [
-        {"fuente": "Ley 17/2001, de Marcas, Art. 51", "texto": "Serán nulas las marcas registradas contraviniendo los requisitos del artículo 5 y siguientes."},
-        {"fuente": "Manual OEPM", "texto": "Ejemplos prácticos sobre nulidad de marca."}
-    ]
-}
+# ---- Explicación de la Aplicación ----
+st.title("MVP LexDomus: Deliberación jurídica en Propiedad Intelectual")
 
-ONTOLOGIA_PI = {
-    "Marca": ["Definición", "Registro", "Nulidad", "Oposición"],
-    "Derechos de autor": ["Obra", "Derechos morales", "Derechos patrimoniales", "Duración"],
-    "Patente": ["Invención", "Solicitud", "Concesión", "Nulidad"],
-}
+st.markdown("""
+Este MVP genera un árbol de razonamiento jurídico a partir de tu pregunta, estructurando subpreguntas y simulando respuestas basadas en contexto jurídico.
+- **Ontología PI:** El motor organiza conceptos y relaciones propias del Derecho de la Propiedad Intelectual.
+- **Corpus legal:** Las respuestas simulan estar basadas en leyes, sentencias y tratados relevantes (BOE, OEPM, TJUE, OMPI, etc).
+- **Reasoning Tracker:** Cada paso del razonamiento queda registrado y puede exportarse.
+---
+""")
 
-def pathrag_simulator(pregunta):
-    """Mockup de recuperación tipo PathRAG"""
-    # Busca por coincidencia sencilla
-    for key, docs in CORPUS_LEGAL.items():
-        if pregunta.lower() in key.lower():
-            return docs
-    return [{"fuente": "No encontrada", "texto": "No se han encontrado fuentes directas en el corpus legal. Considere revisar manualmente en el BOE y bases jurídicas."}]
+# ---- Parámetros del Árbol ----
+with st.sidebar:
+    st.header("Opciones de árbol")
+    max_depth = st.slider("Profundidad máxima", 1, 4, 2)
+    max_width = st.slider("Anchura máxima", 1, 4, 2)
+    st.info("La profundidad controla cuántos niveles de subpreguntas se generan. La anchura, cuántas subpreguntas por nodo.")
 
-def validador_epistemico(respuesta):
-    """Mockup: siempre valida, pero muestra explicación."""
-    if respuesta["fuente"] == "No encontrada":
-        return False, "No se ha encontrado una fuente legal directa para esta subpregunta."
-    return True, f"Respaldada por: {respuesta['fuente']}"
+# ---- Pregunta Principal ----
+pregunta = st.text_input("Introduce tu pregunta jurídica de PI:", value="¿Puede una marca sonora ser registrada en la Unión Europea?")
 
-# --- Generador de árbol de razonamiento (Inquiry Engine) ---
-def inquiry_tree(pregunta, max_depth=2, max_width=2):
-    def expand(nodo, depth):
-        if depth >= max_depth:
-            return {}
-        hijos = {}
-        for i in range(1, max_width + 1):
-            subq = f"Subpregunta {depth+1}.{i} sobre '{nodo}'"
-            hijos[subq] = expand(subq, depth + 1)
-        return hijos
-    return {pregunta: expand(pregunta, 0)}
-
-# --- Contextual Generator (Simulación) ---
-def contextual_generator(pregunta):
-    docs = pathrag_simulator(pregunta)
-    respuestas = []
-    for doc in docs:
-        ok, val = validador_epistemico(doc)
-        respuestas.append({
-            "pregunta": pregunta,
-            "respuesta": doc["texto"],
-            "fuente": doc["fuente"],
-            "validacion": val
-        })
-    return respuestas
-
-# --- Reasoning Tracker ---
 if "reasoning_tracker" not in st.session_state:
     st.session_state.reasoning_tracker = []
 
-def add_to_reasoning_tracker(registro):
-    st.session_state.reasoning_tracker.append(registro)
+if st.button("Generar árbol de razonamiento"):
+    ie = InquiryEngine(pregunta, max_depth=max_depth, max_width=max_width)
+    tree = ie.generate()
+    st.session_state.tree = tree
+    st.session_state.reasoning_tracker = []  # Reset tracker
 
-# --- App Frontend ---
-st.title("MVP Código Deliberativo: Derecho de Propiedad Intelectual")
-st.markdown("""
-**¿Qué hace esta aplicación?**  
-Descompone tu pregunta jurídica en un árbol de razonamiento, te permite consultar y justificar cada paso, y te da el historial completo (auditable) con referencias legales y doctrinales.
+if "tree" in st.session_state:
+    tree = st.session_state.tree
 
-- **Ontología PI:** Mapea conceptos clave y relaciones jurídicas.
-- **Corpus legal:** Leyes, sentencias y manuales PI.
-- **PathRAG:** Simula cómo se buscan y encadenan fuentes relevantes.
-- **Reasoning Tracker:** Registra cada paso, decisión y fuente.
-""")
-
-st.sidebar.header("Parámetros del Árbol de Indagación")
-pregunta_inicial = st.sidebar.text_input("Pregunta jurídica principal", "¿Qué es una marca?")
-max_depth = st.sidebar.slider("Profundidad máxima", 1, 4, 2)
-max_width = st.sidebar.slider("Anchura máxima", 1, 4, 2)
-
-tree = inquiry_tree(pregunta_inicial, max_depth, max_width)
-
-# --- Función recursiva para mostrar el árbol y permitir consulta de contexto ---
-def mostrar_arbol(nodo, hijos):
-    with st.expander(nodo, expanded=True):
-        if st.button(f"Generar contexto para: {nodo}", key=f"context_{nodo}"):
-            respuestas = contextual_generator(nodo)
-            for resp in respuestas:
-                st.success(f"**Respuesta:** {resp['respuesta']}\n\n**Fuente:** {resp['fuente']}\n\n**Validación:** {resp['validacion']}")
-                # Añadir al Reasoning Tracker
-                add_to_reasoning_tracker({
-                    "Fecha": datetime.datetime.now().isoformat(),
-                    "Pregunta": resp["pregunta"],
-                    "Respuesta": resp["respuesta"],
-                    "Fuente": resp["fuente"],
-                    "Validación": resp["validacion"]
+    # --- Funciones de despliegue de árbol (sin expanders anidados) ---
+    def mostrar_arbol_planar(arbol, nivel=0):
+        for nodo, hijos in arbol.items():
+            st.markdown("&nbsp;"*4*nivel + f"- **{nodo}**", unsafe_allow_html=True)
+            # Botón para generar contexto por subpregunta
+            if st.button(f"Generar contexto para: {nodo}", key=f"context-{nodo}-{nivel}"):
+                # Simulación de contexto
+                cg = ContextualGenerator(nodo)
+                contexto = cg.get_context()
+                st.success(f"**Contexto:** {contexto}")
+                # Registrar paso en Reasoning Tracker
+                st.session_state.reasoning_tracker.append({
+                    "Pregunta/Subpregunta": nodo,
+                    "Contexto": contexto,
+                    "Nivel": nivel
                 })
-        # Recursividad
-        for hijo, subhijos in hijos.items():
-            mostrar_arbol(hijo, subhijos)
+            if hijos:
+                mostrar_arbol_planar(hijos, nivel+1)
 
-st.header("Árbol de razonamiento generado")
-for raiz, hijos in tree.items():
-    mostrar_arbol(raiz, hijos)
+    def arbol_a_ascii(arbol, prefijo=""):
+        resultado = ""
+        nodos = list(arbol.keys())
+        for i, nodo in enumerate(nodos):
+            ultimo = (i == len(nodos) - 1)
+            rama = "└── " if ultimo else "├── "
+            resultado += f"{prefijo}{rama}{nodo}\n"
+            hijos = arbol[nodo]
+            if hijos:
+                nuevo_prefijo = prefijo + ("    " if ultimo else "│   ")
+                resultado += arbol_a_ascii(hijos, nuevo_prefijo)
+        return resultado
+
+    st.subheader("Árbol de razonamiento (visual)")
+    mostrar_arbol_planar(tree)
+
+    st.subheader("Árbol de razonamiento (ASCII)")
+    st.code(arbol_a_ascii(tree), language="text")
+
+    st.markdown("---")
+    st.subheader("Reasoning Tracker (historial de pasos)")
+    if st.session_state.reasoning_tracker:
+        df = pd.DataFrame(st.session_state.reasoning_tracker)
+        st.dataframe(df)
+        st.download_button("Descargar Reasoning Tracker como CSV", data=df.to_csv(index=False), file_name="reasoning_tracker.csv", mime="text/csv")
+    else:
+        st.info("Genera contexto para alguna subpregunta para ver el Reasoning Tracker.")
+
+# ---- Explicación de Ontología PI y Grafo Legal (Mockup visual) ----
+with st.expander("¿Qué es la Ontología PI y el Grafo Legal?"):
+    st.markdown("""
+    - **Ontología PI:** Es un mapa conceptual de los elementos clave de la Propiedad Intelectual (obras, autores, derechos, límites, infracciones, procedimientos).
+    - **Grafo Legal:** Representa cómo se conectan conceptos y normas, permitiendo búsquedas de información relevantes para cada consulta.
+    - **Ejemplo visual:**  
+    """)
+    st.image("A_flowchart_visualization_diagram_titled__PI__Ejem.png", caption="Estructura conceptual PI (mockup)")
+    st.code("""
+    Obra
+     ├── Autor
+     ├── Derecho moral
+     ├── Derecho patrimonial
+         └── Licencias
+     ├── Infracción
+     └── Procedimiento
+    """, language="text")
+
+with st.expander("¿Qué fuentes legales consulta el MVP?"):
+    st.markdown("""
+    - Ley de Marcas, Ley de PI, Directivas y Reglamentos UE
+    - BOE, OEPM, ECLI (sentencias), TJUE, OMPI
+    - Tratados internacionales (ADPIC, Convenio de París)
+    """)
+
+with st.expander("¿Cómo se valida la respuesta?"):
+    st.markdown("""
+    Cada contexto simulado en el MVP debe estar apoyado en normas, doctrina o jurisprudencia.
+    (En el futuro: PathRAG validará automáticamente contra corpus legal + grafo PI.)
+    """)
+
+with st.expander("Roadmap de desarrollo (próximos pasos)"):
+    st.markdown("""
+    1. Conexión real con corpus legal y recuperación automática (PathRAG)
+    2. Implementación de validación epistémica estricta
+    3. Mejora del Reasoning Tracker y explicación textual automática
+    4. Generación automática de informes jurídicos justificando cada paso
+    5. Integración de módulos para auditoría y revisión colaborativa
+    """)
 
 st.markdown("---")
-st.header("Ontología PI (Demo Visual)")
-st.json(ONTOLOGIA_PI)
+st.caption("Demo orientada a ANECA, despachos y formación jurídica avanzada. Contacto: [jftamames.gitbook.io/el-codigo-deliberativo](https://jftamames.gitbook.io/el-codigo-deliberativo/)")
 
-st.markdown("---")
-st.header("Reasoning Tracker (Auditoría del razonamiento)")
-if st.session_state.reasoning_tracker:
-    df = pd.DataFrame(st.session_state.reasoning_tracker)
-    st.dataframe(df)
-    st.download_button("Descargar Reasoning Tracker (CSV)", df.to_csv(index=False), file_name="reasoning_tracker.csv")
-else:
-    st.info("No hay pasos aún en el Reasoning Tracker.")
-
-st.markdown("---")
-st.header("Roadmap y justificación del MVP")
-st.markdown("""
-- **Ya permite descomponer y documentar el razonamiento jurídico paso a paso.**
-- **Puedes auditar y exportar el razonamiento y las fuentes.**
-- **Simula la integración de corpus legal, ontología PI y PathRAG.**
-- **Permite aprendizaje y uso profesional desde el primer día.**
-- **Siguiente Sprint:** Integrar corpus legal real, añadir PathRAG avanzado, grafo PI navegable, y validación doctrinal automática.
-""")
-st.subheader("Visualización estructurada del razonamiento (ASCII)")
-tree_ascii = """
-[¿Cómo se protege una obra bajo PI?]
-    ├── [¿Qué se considera obra?]
-    │       ├── [Requisitos de originalidad]
-    │       └── [Ejemplos de obras]
-    ├── [¿Cuáles son los derechos del autor?]
-    │       ├── [Derechos morales]
-    │       └── [Derechos patrimoniales]
-    └── [¿Qué límites existen a la protección?]
-            ├── [Excepciones y limitaciones]
-            └── [Duración de la protección]
-"""
-st.code(tree_ascii, language="text")
-st.markdown("_Esta visualización ayuda a entender la lógica y profundidad del análisis jurídico._")
